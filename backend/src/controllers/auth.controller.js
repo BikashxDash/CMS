@@ -1,45 +1,240 @@
-const { registerUser, loginUser } = require("../services/auth.service");
-const generateToken = require("../utils/generateToken");
+const pool = require("../config/db");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const transporter = require("../config/mailer");
 
-const register = async (req, res) => {
+/*
+========================================
+  ACTIVATE ACCOUNT
+  POST /api/auth/activate
+========================================
+*/
+exports.activateAccount = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { userId, email, dob, password } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!userId || !email || !dob || !password) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
     }
 
-    const user = await registerUser(name, email, password, role);
+    const result = await pool.query(
+      `SELECT * FROM users 
+       WHERE user_id = $1 
+       AND LOWER(email) = LOWER($2) 
+       AND dob = $3`,
+      [userId, email, dob]
+    );
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user,
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    const user = result.rows[0];
+
+    if (user.is_activated) {
+      return res.status(400).json({
+        message: "Account already activated",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await pool.query(
+      `UPDATE users 
+       SET password = $1, 
+           is_activated = true 
+       WHERE user_id = $2`,
+      [hashedPassword, userId]
+    );
+
+    return res.status(200).json({
+      message: "Account activated successfully",
     });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Activation Error:", error);
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+/*
+========================================
+  LOGIN
+  POST /api/auth/login
+========================================
+*/
+exports.login = async (req, res) => {
+  try {
+    const { userId, password } = req.body;
+
+    if (!userId || !password) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
     }
 
-    const user = await loginUser(email, password);
+    const result = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userId]
+    );
 
-    const token = generateToken(user);
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid credentials",
+      });
+    }
 
-    res.json({
+    const user = result.rows[0];
+
+    if (!user.is_activated) {
+      return res.status(400).json({
+        message: "Account not activated",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    /*
+    ========================================
+      ADMIN → SEND OTP (NO JWT YET)
+    ========================================
+    */
+    if (user.role === "admin") {
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      await pool.query(
+        "INSERT INTO otps (user_id, otp, expires_at) VALUES ($1, $2, $3)",
+        [user.user_id, otp, expiresAt]
+      );
+
+      // 🔥 Send response immediately
+      res.status(200).json({
+        message: "OTP sent to registered email",
+        requireOtp: true,
+      });
+
+      // 📧 Send email in background (no await)
+      transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: "KMBB Admin Login OTP",
+        html: `
+          <h3>Your Admin Login OTP</h3>
+          <h2>${otp}</h2>
+          <p>This OTP will expire in 5 minutes.</p>
+        `,
+      }).catch(error => {
+        console.error("Email send error:", error);
+      });
+
+      return; // important
+    }
+
+    /*
+    ========================================
+      STUDENT / STAFF → DIRECT JWT
+    ========================================
+    */
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
       message: "Login successful",
       token,
       role: user.role,
     });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Login Error:", error);
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 
-module.exports = { register, login };
+
+/*
+========================================
+  VERIFY OTP (ADMIN)
+  POST /api/auth/verify-otp
+========================================
+*/
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+
+    if (!userId || !otp) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM otps WHERE user_id = $1 AND otp = $2 ORDER BY created_at DESC LIMIT 1",
+      [userId, otp]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    const record = result.rows[0];
+
+    if (new Date() > record.expires_at) {
+      return res.status(400).json({
+        message: "OTP expired",
+      });
+    }
+
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE user_id = $1",
+      [userId]
+    );
+
+    const user = userResult.rows[0];
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      role: user.role,
+    });
+
+  } catch (error) {
+    console.error("OTP Verify Error:", error);
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};

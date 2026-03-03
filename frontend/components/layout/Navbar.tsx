@@ -37,14 +37,14 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/auth/register"
+            href="/auth/activate"
             className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-              pathname === "/auth/register"
+              pathname === "/auth/activate"
                 ? "bg-white text-black"
                 : "text-white hover:bg-white/20"
             }`}
           >
-            Sign Up
+            Activate
           </Link>
 
         </div>

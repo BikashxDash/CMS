@@ -4,119 +4,132 @@
 ====================================================
 STAFF DASHBOARD PAGE
 ----------------------------------------------------
-This page is the main dashboard for staff users.
+Purpose:
+Teacher overview dashboard
 
-Security Flow:
-1. Check JWT token from localStorage
-2. Check role = "staff"
-3. If unauthorized → redirect to login
-4. If authorized → show staff dashboard
-
-Only staff users can access this page.
+Features:
+• Greeting
+• Live clock
+• Quick actions
 ====================================================
 */
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function StaffDashboard() {
 
   /*
   ========================================
-  ROUTER
-  Used for redirecting user
+  STATE VARIABLES
   ========================================
   */
-  const router = useRouter();
+  const [greeting, setGreeting] = useState("");
+  const [time, setTime] = useState("");
+
 
 
   /*
   ========================================
-  AUTHORIZATION STATE
-  Controls dashboard rendering
+  DETERMINE GREETING
   ========================================
   */
-  const [authorized, setAuthorized] = useState(false);
+  const getGreeting = () => {
+
+    const hour = new Date().getHours();
+
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+
+    return "Good Night";
+
+  };
+
 
 
   /*
   ========================================
-  AUTHENTICATION CHECK
-  Runs once when page loads
-
-  Steps:
-  1. Get token from localStorage
-  2. Get role from localStorage
-  3. If token missing OR role not staff
-     → redirect to login
-  4. Otherwise allow access
+  REAL TIME CLOCK
   ========================================
   */
   useEffect(() => {
 
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+    const updateClock = () => {
 
-    // Unauthorized access protection
-    if (!token || role !== "staff") {
-      router.replace("/auth/login");
-    }
+      setGreeting(getGreeting());
 
-    // Authorized staff
-    else {
-      setAuthorized(true);
-    }
+      setTime(
+        new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit"
+        })
+      );
+
+    };
+
+    updateClock();
+
+    const interval = setInterval(updateClock, 1000);
+
+    return () => clearInterval(interval);
 
   }, []);
 
 
-  /*
-  ========================================
-  LOADING PROTECTION
-  Prevent dashboard flash before auth check
-  ========================================
-  */
-  if (!authorized) return null;
 
-
-  /*
-  ========================================
-  STAFF DASHBOARD UI
-  ========================================
-  */
   return (
 
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 p-8">
+    <div className="space-y-10">
 
-      {/* PAGE TITLE */}
-      <h1 className="text-3xl font-semibold mb-6 text-neutral-800 dark:text-white">
-        Staff Dashboard
-      </h1>
+      {/* ====================================
+          GREETING HEADER
+      ==================================== */}
+      <div>
 
+        <h1 className="text-3xl font-semibold">
 
-      {/* DASHBOARD GRID */}
-      <div className="grid md:grid-cols-3 gap-6">
+          {greeting}, Staff
 
+        </h1>
 
-        {/* CLASS MANAGEMENT MODULE */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-800 shadow">
-          Manage Classes
-        </div>
+        <p className="text-neutral-500">
 
+          Current Time • {time}
 
-        {/* STUDENT LIST MODULE */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-800 shadow">
-          View Students
-        </div>
+        </p>
+
+      </div>
 
 
-        {/* ATTENDANCE MODULE */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-800 shadow">
-          Attendance Panel
+
+      {/* ====================================
+          QUICK ACTIONS
+      ==================================== */}
+      <div>
+
+        <h2 className="text-xl font-semibold mb-4">
+          Quick Actions
+        </h2>
+
+        <div className="flex flex-wrap gap-4">
+
+          <button className="px-5 py-3 bg-black text-white rounded-lg">
+            Take Attendance
+          </button>
+
+          <button className="px-5 py-3 bg-black text-white rounded-lg">
+            Upload Notes
+          </button>
+
+          <button className="px-5 py-3 bg-black text-white rounded-lg">
+            View Students
+          </button>
+
         </div>
 
       </div>
 
     </div>
+
   );
 }

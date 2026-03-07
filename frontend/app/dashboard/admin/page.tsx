@@ -4,116 +4,210 @@
 ====================================================
 ADMIN DASHBOARD PAGE
 ----------------------------------------------------
-This page is the main dashboard for admin users.
-
-Security Flow:
-1. Check if JWT token exists in localStorage
-2. Check if role = "admin"
-3. If not authorized → redirect to login page
-4. If authorized → show admin dashboard
-
-Only admins can access this page.
+Features:
+• Time based greeting
+• Live clock
+• Current date
+• Stats cards
+• Quick actions
 ====================================================
 */
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
 
   /*
   ========================================
-  ROUTER
-  Used to redirect user if unauthorized
+  STATES
   ========================================
   */
-  const router = useRouter();
+  const [greeting, setGreeting] = useState("");
+  const [time, setTime] = useState("");
+  const [date, setDate] = useState("");
 
 
   /*
   ========================================
-  AUTHORIZATION STATE
-  Controls whether dashboard should render
+  FUNCTION: GET GREETING BASED ON TIME
   ========================================
   */
-  const [authorized, setAuthorized] = useState(false);
+  const getGreeting = () => {
+
+    const hour = new Date().getHours();
+
+    if (hour < 12) return "Good Morning";
+
+    if (hour < 17) return "Good Afternoon";
+
+    if (hour < 21) return "Good Evening";
+
+    return "Good Night";
+
+  };
 
 
   /*
   ========================================
-  AUTHENTICATION CHECK
-  Runs once when page loads
+  FUNCTION: FORMAT TIME
+  ========================================
+  */
+  const getFormattedTime = () => {
 
-  Steps:
-  1. Read token from localStorage
-  2. Read user role
-  3. If token missing OR role not admin
-     → redirect to login
-  4. Otherwise allow access
+    const now = new Date();
+
+    return now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+  };
+
+
+  /*
+  ========================================
+  FUNCTION: FORMAT DATE
+  ========================================
+  */
+  const getFormattedDate = () => {
+
+    const now = new Date();
+
+    return now.toLocaleDateString([], {
+      weekday: "long",
+      month: "long",
+      day: "numeric"
+    });
+
+  };
+
+
+  /*
+  ========================================
+  REAL-TIME CLOCK UPDATE
   ========================================
   */
   useEffect(() => {
 
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+    const updateTime = () => {
 
-    // If not logged in OR not admin → redirect
-    if (!token || role !== "admin") {
-      router.replace("/auth/login");
-    }
+      setGreeting(getGreeting());
+      setTime(getFormattedTime());
+      setDate(getFormattedDate());
 
-    // Authorized admin
-    else {
-      setAuthorized(true);
-    }
+    };
+
+    // run immediately
+    updateTime();
+
+    // update every second
+    const interval = setInterval(updateTime, 1000);
+
+    return () => clearInterval(interval);
 
   }, []);
 
 
-  /*
-  ========================================
-  LOADING PROTECTION
-  Prevents dashboard flashing before auth check
-  ========================================
-  */
-  if (!authorized) return null;
-
-
-  /*
-  ========================================
-  ADMIN DASHBOARD UI
-  ========================================
-  */
   return (
 
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 p-8">
+    <div className="space-y-10">
+
+      {/* ====================================
+          DASHBOARD HEADER
+      ==================================== */}
+      <div>
+
+        <h1 className="text-3xl font-semibold">
+
+          {greeting}, Admin
+
+        </h1>
+
+        <p className="text-neutral-500 mt-1">
+
+          {date} • {time}
+
+        </p>
+
+      </div>
 
 
-      {/* PAGE TITLE */}
-      <h1 className="text-3xl font-semibold mb-6 text-neutral-800 dark:text-white">
-        Admin Dashboard
-      </h1>
 
+      {/* ====================================
+          STATS CARDS
+      ==================================== */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-      {/* DASHBOARD GRID */}
-      <div className="grid md:grid-cols-3 gap-6">
+        <div className="p-6 rounded-xl bg-white dark:bg-neutral-800 shadow">
+          <p className="text-sm text-neutral-500">
+            Total Students
+          </p>
 
-
-        {/* STAFF MANAGEMENT MODULE */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-800 shadow">
-          Manage Staff
+          <h2 className="text-2xl font-semibold">
+            0
+          </h2>
         </div>
 
 
-        {/* STUDENT MANAGEMENT MODULE */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-800 shadow">
-          Manage Students
+        <div className="p-6 rounded-xl bg-white dark:bg-neutral-800 shadow">
+          <p className="text-sm text-neutral-500">
+            Total Staff
+          </p>
+
+          <h2 className="text-2xl font-semibold">
+            0
+          </h2>
         </div>
 
 
-        {/* SYSTEM SETTINGS MODULE */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-neutral-800 shadow">
-          System Settings
+        <div className="p-6 rounded-xl bg-white dark:bg-neutral-800 shadow">
+          <p className="text-sm text-neutral-500">
+            Branches
+          </p>
+
+          <h2 className="text-2xl font-semibold">
+            0
+          </h2>
+        </div>
+
+
+        <div className="p-6 rounded-xl bg-white dark:bg-neutral-800 shadow">
+          <p className="text-sm text-neutral-500">
+            Notices
+          </p>
+
+          <h2 className="text-2xl font-semibold">
+            0
+          </h2>
+        </div>
+
+      </div>
+
+
+
+      {/* ====================================
+          QUICK ACTIONS
+      ==================================== */}
+      <div>
+
+        <h2 className="text-xl font-semibold mb-4">
+          Quick Actions
+        </h2>
+
+        <div className="flex gap-4 flex-wrap">
+
+          <button className="px-5 py-3 rounded-lg bg-black text-white">
+            Add Student
+          </button>
+
+          <button className="px-5 py-3 rounded-lg bg-black text-white">
+            Add Staff
+          </button>
+
+          <button className="px-5 py-3 rounded-lg bg-black text-white">
+            Create Notice
+          </button>
+
         </div>
 
       </div>

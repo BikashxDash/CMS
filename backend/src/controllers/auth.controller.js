@@ -45,8 +45,7 @@ exports.activateAccount = async (req, res) => {
 
     await pool.query(
       `UPDATE users 
-       SET password = $1, 
-           is_activated = true 
+       SET password = $1, is_activated = true 
        WHERE user_id = $2`,
       [hashedPassword, userId]
     );
@@ -109,26 +108,49 @@ exports.login = async (req, res) => {
 
     /*
     ========================================
-      ADMIN → SEND OTP (NO JWT YET)
+      ADMIN LOGIN → OTP SYSTEM
     ========================================
     */
     if (user.role === "admin") {
 
+      // delete expired OTPs
+      await pool.query(
+        "DELETE FROM otps WHERE expires_at < NOW()"
+      );
+
+      // rate limit (1 OTP per minute)
+      const recentOtp = await pool.query(
+        `SELECT * FROM otps
+         WHERE user_id = $1
+         AND created_at > NOW() - INTERVAL '60 seconds'`,
+        [user.user_id]
+      );
+
+      if (recentOtp.rows.length > 0) {
+        return res.status(429).json({
+          message: "Please wait before requesting another OTP",
+        });
+      }
+
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      const hashedOtp = await bcrypt.hash(otp, 10);
+
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
       await pool.query(
-        "INSERT INTO otps (user_id, otp, expires_at) VALUES ($1, $2, $3)",
-        [user.user_id, otp, expiresAt]
+        `INSERT INTO otps (user_id, otp, expires_at)
+         VALUES ($1,$2,$3)`,
+        [user.user_id, hashedOtp, expiresAt]
       );
 
-      // 🔥 Send response immediately
+      // send response immediately
       res.status(200).json({
         message: "OTP sent to registered email",
         requireOtp: true,
       });
 
-      // 📧 Send email in background (no await)
+      // send email in background
       transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: user.email,
@@ -138,18 +160,19 @@ exports.login = async (req, res) => {
           <h2>${otp}</h2>
           <p>This OTP will expire in 5 minutes.</p>
         `,
-      }).catch(error => {
-        console.error("Email send error:", error);
+      }).catch(err => {
+        console.error("Email Error:", err);
       });
 
-      return; // important
+      return;
     }
 
     /*
     ========================================
-      STUDENT / STAFF → DIRECT JWT
+      STUDENT / STAFF LOGIN
     ========================================
     */
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -176,7 +199,7 @@ exports.login = async (req, res) => {
 
 /*
 ========================================
-  VERIFY OTP (ADMIN)
+  VERIFY OTP
   POST /api/auth/verify-otp
 ========================================
 */
@@ -191,8 +214,11 @@ exports.verifyOtp = async (req, res) => {
     }
 
     const result = await pool.query(
-      "SELECT * FROM otps WHERE user_id = $1 AND otp = $2 ORDER BY created_at DESC LIMIT 1",
-      [userId, otp]
+      `SELECT * FROM otps
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [userId]
     );
 
     if (result.rows.length === 0) {
@@ -203,9 +229,29 @@ exports.verifyOtp = async (req, res) => {
 
     const record = result.rows[0];
 
+    if (record.attempts >= 5) {
+      return res.status(403).json({
+        message: "Too many wrong attempts",
+      });
+    }
+
     if (new Date() > record.expires_at) {
       return res.status(400).json({
         message: "OTP expired",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(otp, record.otp);
+
+    if (!isMatch) {
+
+      await pool.query(
+        "UPDATE otps SET attempts = attempts + 1 WHERE id = $1",
+        [record.id]
+      );
+
+      return res.status(400).json({
+        message: "Invalid OTP",
       });
     }
 
@@ -223,6 +269,11 @@ exports.verifyOtp = async (req, res) => {
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
+    );
+
+    await pool.query(
+      "DELETE FROM otps WHERE user_id = $1",
+      [userId]
     );
 
     return res.status(200).json({

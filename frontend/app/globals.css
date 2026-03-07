@@ -1,29 +1,106 @@
+/*
+====================================================
+TAILWIND CSS BASE IMPORTS
+----------------------------------------------------
+These directives load Tailwind's core layers:
+
+1. base       → resets + default browser styles
+2. components → reusable component classes
+3. utilities  → utility classes (flex, grid, p-4 etc.)
+
+Without these Tailwind will not work.
+====================================================
+*/
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 
+
+/*
+====================================================
+GLOBAL CSS VARIABLES (LIGHT MODE)
+----------------------------------------------------
+These variables define default colors used
+throughout the app.
+
+They allow easy theme switching later.
+====================================================
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #ffffff;   /* Page background color */
+  --foreground: #171717;   /* Default text color */
 }
+
+
+
+/*
+====================================================
+TAILWIND THEME BRIDGE
+----------------------------------------------------
+This maps CSS variables to Tailwind theme tokens.
+
+This allows Tailwind utilities like:
+bg-background
+text-foreground
+
+to use our custom CSS variables.
+====================================================
+*/
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Fonts from Next.js font loader */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+
+
+/*
+====================================================
+DARK MODE SUPPORT
+----------------------------------------------------
+Detects user's system theme automatically.
+
+If system prefers dark mode:
+background and text colors change.
+====================================================
+*/
+
 @media (prefers-color-scheme: dark) {
+
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a0a0a;   /* dark background */
+    --foreground: #ededed;   /* light text */
   }
+
 }
 
+
+
+/*
+====================================================
+GLOBAL BODY STYLING
+----------------------------------------------------
+Applies background, text color and font
+to the entire application.
+====================================================
+*/
+
 body {
+
+  /* Use theme background */
   background: var(--background);
+
+  /* Use theme text color */
   color: var(--foreground);
+
+  /* Default font stack */
   font-family: Arial, Helvetica, sans-serif;
+
 }

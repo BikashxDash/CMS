@@ -12,6 +12,7 @@ Features
 */
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   User,
   ClipboardCheck,
@@ -23,6 +24,22 @@ import {
 import ProfilePanel from "../../dashboard/student/ProfilePanel";
 
 export default function StudentDashboard() {
+
+  const router = useRouter();
+
+  const handleProfileClick = () => {
+
+  if (window.innerWidth < 768) {
+
+    router.push("/dashboard/student/profile");
+
+  } else {
+
+    setOpenProfile(true);
+
+  }
+
+};
 
   const [openProfile, setOpenProfile] = useState(false);
 
@@ -98,7 +115,7 @@ export default function StudentDashboard() {
 
         {/* PROFILE ICON */}
         <button
-          onClick={() => setOpenProfile(true)}
+          onClick={handleProfileClick}
           className="w-10 h-10 rounded-full overflow-hidden bg-neutral-300 flex items-center justify-center shadow hover:scale-105 transition"
         >
 

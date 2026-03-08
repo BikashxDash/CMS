@@ -6,12 +6,13 @@ STUDENT PROFILE PANEL
 ----------------------------------------
 Features:
 • Pencil icon → Edit mode
-• Edit mode me sab data field me dikhega
-• Sirf phone, email, password editable
+• Normal mode → Label + Value view
+• Edit mode → Fields
+• Only phone/email/password editable
 • Password eye toggle
 • Profile pic preview
 • Change / Remove pic only edit mode
-• Logout hide in edit mode
+• Logout hidden in edit mode
 • Update + Cancel actions
 ========================================
 */
@@ -26,34 +27,16 @@ export default function ProfilePanel({
   setProfileImage
 }: any) {
 
-  /*
-  ========================================
-  STATES
-  ========================================
-  */
-
-  // image preview modal
   const [preview, setPreview] = useState(false);
-
-  // edit mode toggle
   const [editMode, setEditMode] = useState(false);
-
-  // password visibility
   const [showPassword, setShowPassword] = useState(false);
-
-
-  /*
-  ========================================
-  STUDENT DATA STATE
-  (later database se load hoga)
-  ========================================
-  */
 
   const [student, setStudent] = useState({
     name: "Aditya Sharma",
     id: "STU1001",
     branch: "CSE",
-    semester: "3",
+    year: "3rd",
+    semester: "6",
     blood: "O+",
     phone: "9876543210",
     email: "student@mail.com",
@@ -61,97 +44,56 @@ export default function ProfilePanel({
   });
 
 
-
-  /*
-  ========================================
-  HANDLE INPUT CHANGE
-  ========================================
-  */
-
   const handleChange = (e:any) => {
-
     setStudent({
       ...student,
       [e.target.name]: e.target.value
     });
-
   };
 
 
-
-  /*
-  ========================================
-  HANDLE IMAGE UPLOAD
-  ========================================
-  */
-
   const handleUpload = (e:any) => {
-
     const file = e.target.files[0];
-
     if (!file) return;
 
     const url = URL.createObjectURL(file);
-
     setProfileImage(url);
-
   };
 
-
-
-  /*
-  ========================================
-  REMOVE PROFILE PHOTO
-  ========================================
-  */
 
   const removePhoto = () => {
-
     setProfileImage(null);
-
   };
-
 
 
   return (
 
     <div className={`fixed inset-0 z-50 ${open ? "visible" : "invisible"}`}>
 
-      {/* Overlay */}
+      {/* Background overlay */}
       <div
         onClick={onClose}
         className="absolute inset-0 bg-black/40"
       />
 
 
+
       {/* PROFILE PANEL */}
-      <div
-        className={`
-        absolute right-6 top-6 bottom-6
-        w-96
-        bg-white dark:bg-neutral-900
-        rounded-3xl
-        shadow-2xl
-        transition-transform duration-300
-        ${open ? "translate-x-0" : "translate-x-full"}
-        `}
-      >
+      <div className={`absolute right-6 top-6 bottom-6 w-96 bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl transition-transform duration-300 flex flex-col ${open ? "translate-x-0" : "translate-x-full"} `} >
 
         {/* HEADER */}
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
 
-          <h2 className="font-semibold text-lg">
+          <h2 className="text-lg font-semibold">
             Profile
           </h2>
 
           <div className="flex gap-4">
 
-            {/* EDIT BUTTON */}
             <button onClick={() => setEditMode(true)}>
               <Pencil size={18}/>
             </button>
 
-            {/* CLOSE BUTTON */}
             <button onClick={onClose}>
               <X size={20}/>
             </button>
@@ -162,7 +104,7 @@ export default function ProfilePanel({
 
 
 
-        <div className="p-6">
+        <div className="p-6 flex-1 overflow-y-auto">
 
           {/* PROFILE IMAGE */}
           <div className="flex flex-col items-center mb-6">
@@ -173,17 +115,14 @@ export default function ProfilePanel({
             >
 
               {profileImage && (
-
                 <img
                   src={profileImage}
                   className="w-full h-full object-cover"
                 />
-
               )}
 
             </div>
 
-            {/* NAME BELOW IMAGE */}
             <p className="font-semibold mt-3">
               {student.name}
             </p>
@@ -194,7 +133,7 @@ export default function ProfilePanel({
 
 
 
-            {/* IMAGE EDIT OPTIONS */}
+            {/* IMAGE OPTIONS */}
             {editMode && (
 
               <div className="flex gap-4 mt-3 text-sm">
@@ -212,14 +151,12 @@ export default function ProfilePanel({
                 </label>
 
                 {profileImage && (
-
                   <button
                     onClick={removePhoto}
                     className="text-red-500"
                   >
                     Remove pic
                   </button>
-
                 )}
 
               </div>
@@ -231,66 +168,92 @@ export default function ProfilePanel({
 
 
           {/* DETAILS */}
-          <div className="space-y-3 text-sm">
+          <div className="space-y-4 text-sm">
 
-            {/* ID */}
-            <input
-              value={student.id}
-              disabled
-              className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded outline-none opacity-70"
-            />
+            {/* STUDENT ID */}
+            {editMode ? (
+              <input
+                value={student.id}
+                disabled
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded opacity-70"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Student ID :</span> {student.id}</p>
+            )}
 
 
             {/* BRANCH */}
-            <input
-              value={student.branch}
-              disabled
-              className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded outline-none opacity-70"
-            />
+            {editMode ? (
+              <input
+                value={student.branch}
+                disabled
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded opacity-70"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Branch :</span> {student.branch}</p>
+            )}
+
+
+            {/* YEAR */}
+            {editMode ? (
+              <input
+                value={student.year}
+                disabled
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded opacity-70"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Year :</span> {student.year}</p>
+            )}
 
 
             {/* SEMESTER */}
-            <input
-              value={student.semester}
-              disabled
-              className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded outline-none opacity-70"
-            />
+            {editMode ? (
+              <input
+                value={student.semester}
+                disabled
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded opacity-70"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Semester :</span> {student.semester}</p>
+            )}
 
 
             {/* BLOOD GROUP */}
-            <input
-              value={student.blood}
-              disabled
-              className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded outline-none opacity-70"
-            />
+            {editMode ? (
+              <input
+                value={student.blood}
+                disabled
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded opacity-70"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Blood Group :</span> {student.blood}</p>
+            )}
 
 
             {/* PHONE */}
-            <input
-              name="phone"
-              value={student.phone}
-              onChange={handleChange}
-              disabled={!editMode}
-              className={`w-full p-2 rounded outline-none ${
-                editMode
-                  ? "bg-neutral-100 dark:bg-neutral-800"
-                  : "bg-transparent opacity-80"
-              }`}
-            />
+            {editMode ? (
+              <input
+                name="phone"
+                value={student.phone}
+                onChange={handleChange}
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Phone :</span> {student.phone}</p>
+            )}
 
 
             {/* EMAIL */}
-            <input
-              name="email"
-              value={student.email}
-              onChange={handleChange}
-              disabled={!editMode}
-              className={`w-full p-2 rounded outline-none ${
-                editMode
-                  ? "bg-neutral-100 dark:bg-neutral-800"
-                  : "bg-transparent opacity-80"
-              }`}
-            />
+            {editMode ? (
+              <input
+                name="email"
+                value={student.email}
+                onChange={handleChange}
+                className="w-full bg-neutral-100 dark:bg-neutral-800 p-2 rounded"
+              />
+            ) : (
+              <p><span className="text-neutral-400">Email :</span> {student.email}</p>
+            )}
 
 
             {/* PASSWORD */}
@@ -317,13 +280,7 @@ export default function ProfilePanel({
               </div>
 
             ) : (
-
-              <input
-                value="********"
-                disabled
-                className="w-full bg-transparent opacity-80 p-2 outline-none"
-              />
-
+              <p><span className="text-neutral-400">Password :</span> ********</p>
             )}
 
           </div>
@@ -333,7 +290,7 @@ export default function ProfilePanel({
           {/* ACTIONS */}
           {editMode ? (
 
-            <div className="flex gap-6 mt-8 text-sm">
+            <div className="flex gap-6 text-sm p-6 border-t border-neutral-200 dark:border-neutral-800">
 
               <button className="text-green-600">
                 Update
@@ -365,7 +322,7 @@ export default function ProfilePanel({
 
 
 
-      {/* IMAGE PREVIEW MODAL */}
+      {/* IMAGE PREVIEW */}
       {preview && (
 
         <div

@@ -261,7 +261,7 @@ export default function ActivatePage() {
               className="w-1/3 px-4 py-3 rounded-xl
                         bg-neutral-100 dark:bg-neutral-800
                         border border-neutral-200 dark:border-neutral-700
-                        text-center"/>
+                        text-center focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"/>
 
 
             {/* MONTH */}
@@ -282,7 +282,7 @@ export default function ActivatePage() {
               className="w-1/3 px-4 py-3 rounded-xl
                         bg-neutral-100 dark:bg-neutral-800
                         border border-neutral-200 dark:border-neutral-700
-                        text-center"/>
+                        text-center focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"/>
 
 
             {/* YEAR */}
@@ -299,7 +299,7 @@ export default function ActivatePage() {
               className="w-1/3 px-4 py-3 rounded-xl
                         bg-neutral-100 dark:bg-neutral-800
                         border border-neutral-200 dark:border-neutral-700
-                        text-center"/>
+                        text-center focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"/>
 
           </div>
 
@@ -311,7 +311,12 @@ export default function ActivatePage() {
               type={showPassword ? "text" : "password"}
               placeholder="New Password"
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl pr-12"/>
+              className="w-full px-4 py-3 rounded-xl
+                bg-neutral-100 dark:bg-neutral-800
+                border border-neutral-200 dark:border-neutral-700
+                text-neutral-900 dark:text-white
+                placeholder-neutral-400
+                pr-12 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"/>
 
             {/* PASSWORD VISIBILITY TOGGLE */}
             <button
@@ -332,7 +337,12 @@ export default function ActivatePage() {
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm Password"
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl pr-12"/>
+              className="w-full px-4 py-3 rounded-xl
+              bg-neutral-100 dark:bg-neutral-800
+              border border-neutral-200 dark:border-neutral-700
+              text-neutral-900 dark:text-white
+              placeholder-neutral-400
+              pr-12 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20"/>
 
             <button
               type="button"

@@ -47,10 +47,10 @@ export default function Home() {
           Main welcome area
           ==================================== */}
       <section
-        className="relative flex-1 flex flex-col
+        className="relative min-h-screen flex flex-col
                    items-center justify-center
                    text-center px-6
-                   pt-28 md:pt-32
+                   pt-28 md:pt-32 pb-20
                    overflow-hidden"
       >
 

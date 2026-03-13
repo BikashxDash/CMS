@@ -60,17 +60,27 @@ export default function Navbar() {
 
 
         {/* ====================================
-            COLLEGE LOGO
+            COLLEGE LOGO + COLLEGE NAME
             Uses Next.js Image optimization
             ==================================== */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
 
+          {/* College Logo */}
           <Image
             src="/new clg logo.png"
             alt="KMBB Logo"
-            width={40}
-            height={40}
+            width={60}
+            height={60}
             className="object-contain"
+          />
+
+          {/* College Name */}
+          <Image
+            src="/clg-name.png"
+            alt="KMBB LOGO"
+            width={160}
+            height={30}
+            className="object-contain hidden sm:block"
           />
 
         </div>

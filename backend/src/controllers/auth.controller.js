@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const transporter = require("../config/mailer");
+const { Languages } = require("lucide-react");
 
 /*
 ========================================
@@ -163,6 +164,28 @@ exports.login = async (req, res) => {
       }).catch(err => {
         console.error("Email Error:", err);
       });
+
+      // send SMS in background (Fast2SMS)
+      if (user.phone) {
+        fetch("https://www.fast2sms.com/dev/bulkV2", {
+          method: "POST",
+          headers: {
+            "authorization": process.env.FAST2SMS_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            route: "q",
+            message:`Your Login OTP is: ${otp}.Valid for 5 minutes.`,
+            // variables_values: otp,
+            numbers: user.phone,
+            languages:"english",
+            flash:0,
+          }),
+        })
+        .then(res => res.json())
+        .then(data => console.log("SMS sent:", data))
+        .catch(err => console.error("SMS Error:", err));
+      }
 
       return;
     }

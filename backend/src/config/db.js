@@ -1,77 +1,51 @@
 /*
 ====================================================
-POSTGRESQL DATABASE CONNECTION CONFIGURATION
+DATABASE CONNECTION (PostgreSQL + Neon)
 ----------------------------------------------------
-This file creates and exports a PostgreSQL
-connection pool using the 'pg' library.
-
-Purpose:
-• Connect backend to PostgreSQL database
-• Manage multiple DB connections efficiently
-• Allow other files to execute queries
-
-Used in:
-controllers
-services
-routes
+• Uses pg Pool for connection management
+• Reads DATABASE_URL from .env
+• SSL enabled (required for Neon cloud DB)
+• Exports pool for queries across project
 ====================================================
 */
 
-
-// Import PostgreSQL Pool class
 const { Pool } = require("pg");
 
-
 /*
-========================================
-CREATE DATABASE CONNECTION POOL
-----------------------------------------
-connectionString is read from .env file
-
-Example:
-DATABASE_URL=postgres://user:password@host:port/database
-========================================
+====================================================
+CREATE DATABASE POOL
+----------------------------------------------------
+• connectionString → full DB URL from .env
+• ssl → required for Neon (secure connection)
+====================================================
 */
-
 const pool = new Pool({
-
   connectionString: process.env.DATABASE_URL,
-
 });
 
-
 /*
-========================================
-TEST DATABASE CONNECTION
-----------------------------------------
-Attempts to connect when server starts.
-
-If successful:
-→ "Database connected" printed in console
-
-If failed:
-→ error printed in console
-========================================
+====================================================
+TEST CONNECTION (on server start)
+----------------------------------------------------
+• Checks if DB is connected successfully
+• Logs status in terminal
+====================================================
 */
-
 pool.connect()
-
-  .then(() => console.log("Database connected"))
-
-  .catch((err) => console.error("Connection error", err));
-
+  .then(() => {
+    console.log("✅ Database connected successfully");
+  })
+  .catch((err) => {
+    console.error("❌ Database connection error:", err.message);
+  });
 
 /*
-========================================
-EXPORT DATABASE POOL
-----------------------------------------
-Allows other files to use this connection.
-
-Example usage in controllers:
-
-const pool = require("../config/db");
-const result = await pool.query("SELECT * FROM users");
-========================================
+====================================================
+EXPORT POOL
+----------------------------------------------------
+• Use this pool in controllers/models
+• Example:
+    pool.query("SELECT * FROM users")
+====================================================
 */
-
 module.exports = pool;

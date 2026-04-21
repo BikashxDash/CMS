@@ -109,10 +109,17 @@ exports.login = async (req, res) => {
 
     /*
     ========================================
-      ADMIN LOGIN → OTP SYSTEM
+      ADMIN LOGIN
+      ⚠️ OTP TEMPORARILY DISABLED FOR DEVELOPMENT
+      To enable OTP: uncomment the code below
+      and set ENABLE_OTP=true in .env
     ========================================
     */
-    if (user.role === "admin") {
+    
+    // Check if OTP is enabled (development flag)
+    const ENABLE_OTP = process.env.ENABLE_OTP === "true";
+
+    if (user.role === "admin" && ENABLE_OTP) {
 
       // delete expired OTPs
       await pool.query(

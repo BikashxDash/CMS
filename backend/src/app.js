@@ -53,17 +53,34 @@ CORS (Cross-Origin Resource Sharing) allows
 frontend and backend running on different ports
 to communicate.
 
-Frontend:
-http://localhost:3000
+Allows:
+- Local machine: http://localhost:3000, http://127.0.0.1:3000
+- Team members: http://TEAM_IP:3000
+- Development: http://TEAM_IP:*
 
-Backend:
-http://localhost:5000
+For production, update this with specific URLs.
 ====================================================
 */
 app.use(cors({
 
-  // Allow requests only from frontend
-  origin: "http://localhost:3000",
+  // Allow requests from localhost and team members on internal network
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // Allow localhost and 127.0.0.1 on any port
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+
+    // Allow internal network IPs (192.168.x.x, 10.x.x.x, etc.)
+    if (origin.match(/^http:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/)) {
+      return callback(null, true);
+    }
+
+    // Reject external origins
+    callback(new Error('CORS not allowed'));
+  },
 
   // Allowed HTTP methods
   methods: ["GET", "POST"],
